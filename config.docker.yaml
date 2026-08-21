@@ -1,0 +1,28 @@
+# Профиль для запуска сервиса в docker-compose (make up).
+# Отличия от config.yaml: postgres и целевые хосты — соседи по сети
+# services_net, поэтому адресация по DNS-именам сервисов.
+logger:
+  file_path: ./logs
+  is_debug: true
+
+scripts:
+  name: scripts
+  version: v1
+  host: 0.0.0.0
+  port: 8080
+  agent_callback_port: 8081
+
+agent:
+  version: v1
+  # maksec — DNS-имя сервиса в сети compose; агент с целевого хоста
+  # обращается к callback-эндпоинту по нему.
+  callback_enpoint: http://maksec:8081/scripts/v1/callback
+  watch_dir: /var/lib/maksec/scripts
+
+postgres:
+  host: postgres
+  port: 5432
+  username: admin
+  password: 123456
+  database: maksec
+  use_ssl: disable

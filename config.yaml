@@ -1,0 +1,23 @@
+logger:
+  file_path: ./logs
+  is_debug: true
+
+scripts:
+  name: scripts
+  version: v1
+  host: 0.0.0.0 # API должны быть достижимы из docker-сети
+  port: 8080
+  agent_callback_port: 8081
+
+agent:
+  version: v1
+  callback_enpoint: http://localhost:8081/scripts/v1/callback
+  watch_dir: /var/lib/maksec/scripts
+
+postgres:
+  host: localhost
+  port: 5432
+  username: admin
+  password: 123456
+  database: maksec
+  use_ssl: disable

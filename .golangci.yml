@@ -1,0 +1,57 @@
+version: "2" # Required for golangci-lint v2.x
+
+run:
+  timeout: 5m
+
+linters:
+  # Disable all by default, then selectively enable
+  default: none
+  enable:
+    - errcheck      # checks for unchecked errors
+    - govet         # standard go vet tool
+    - ineffassign   # detects unused assignments
+    - staticcheck   # the "gold standard" for Go analysis
+    - unused        # checks for unused constants, variables, etc.
+    - misspell      # catches common English misspellings
+    - unparam       # reports unused function parameters
+    - whitespace    # checks for unnecessary newlines
+    - asciicheck    # only ASCII symbols
+
+  exclusions:
+    rules:
+      # Exclude certain linters from running on test files.
+      - path: _test\.go
+        linters:
+          - errcheck
+          - dupl
+          - gosec
+      # Exclude SA9003 (empty branch) from staticcheck, matching upstream Dendrite's policy.
+      - linters:
+          - staticcheck
+        text: "SA9003:"
+
+  settings:
+    revive:
+      severity: warning
+      rules:
+        - name: blank-imports
+        - name: context-as-argument
+        - name: dot-imports
+        - name: error-return
+        - name: error-strings
+        - name: if-return
+        - name: increment-decrement
+        - name: var-naming
+        - name: var-declaration
+        - name: package-comments
+        - name: range
+        - name: receiver-naming
+        - name: time-naming
+        - name: unexported-return
+        - name: indent-error-flow
+        - name: errorf
+
+issues:
+  # Limit the number of issues per linter and per same text
+  max-issues-per-linter: 0
+  max-same-issues: 3

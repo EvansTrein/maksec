@@ -1,0 +1,67 @@
+services:
+  postgres:
+    container_name: maksec_db
+    image: postgres:17.5-alpine
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_DB=maksec
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_vol:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - services_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d maksec"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+  # Сервис maksec: HTTP API на 8080 (create) и 8081 (callback от агентов).
+  # В сети services_net адресуется по имени maksec — этот адрес агент
+  # на целевом хосте использует для callback.
+  maksec:
+    container_name: maksec_service
+    build:
+      context: .
+      dockerfile: cmd/scripts/Dockerfile
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - services_net
+
+  # Целевой Linux-хост: SSH-сервер, куда сервис кладёт скрипты и агента.
+  target:
+    container_name: maksec_target
+    build:
+      context: ./cmd/agent
+      dockerfile: Dockerfile
+    environment:
+      # Пароль root для SSH на целевом хосте; можно переопределить:
+      # SSH_PASSWORD=mypass make stend-up
+      - SSH_PASSWORD=${SSH_PASSWORD:-rootpassword}
+    ports:
+      - "22:22"
+    # CAP_SYS_ADMIN нужен агенту для fanotify (отслеживание open/execute).
+    cap_add:
+      - SYS_ADMIN
+    restart: unless-stopped
+    networks:
+      services_net:
+        aliases:
+          - target-host
+
+volumes:
+  postgres_vol: {}
+
+networks:
+  services_net:
+    driver: bridge
